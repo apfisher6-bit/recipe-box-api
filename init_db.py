@@ -33,8 +33,18 @@ SEED = [
     ),
 ]
 
+USERS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY,
+  user_email TEXT NOT NULL UNIQUE,
+  name TEXT,
+  password_hash TEXT NOT NULL
+);
+"""
+
 connection = sqlite3.connect("recipes.db")
 connection.executescript(SCHEMA)
+connection.executescript(USERS_SCHEMA)
 existing = connection.execute("SELECT COUNT(*) FROM recipes").fetchone()[0]
 if existing == 0:
     connection.executemany(
