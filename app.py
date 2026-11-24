@@ -9,6 +9,7 @@ import sqlite3
 
 from flask import Flask, g, jsonify, request
 
+from werkzeug.security import generate_password_hash, check_password_hash
 DATABASE = "recipes.db"
 
 app = Flask(__name__)
@@ -20,6 +21,12 @@ def get_db():
         g.db.row_factory = sqlite3.Row
         g.db.execute("PRAGMA foreign_keys = ON")
     return g.db
+
+def hash_password(plaintext_password: str) -> str:
+    return generate_password_hash(plaintext_password)
+
+def verify_password(stored_hash: str, candidate_password: str) -> bool:
+    return check_password_hash(stored_hash, candidate_password)
 
 
 @app.teardown_appcontext
