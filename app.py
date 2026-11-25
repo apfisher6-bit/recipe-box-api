@@ -35,6 +35,41 @@ def close_db(exception):
     if db is not None:
         db.close()
 
+@app.post("/register")
+def register():
+    data = request.get_json(silent=True) or {}
+    user_email = data.get("user_email")
+    name = data.get("name")
+    password = data.get("password")
+
+    if not user_email or not password:
+        return jsonify({"error": "user_email and password are required"}), 400
+
+    db = get_db()
+    password_hash = generate_password_hash(password)
+    try:
+        cursor = db.execute("""
+        INSERT INTO users(user_email, name, password_hash)
+        VALUES (?, ?, ?)""",
+        (user_email, name, password_hash),)
+        db.commit()
+
+    except sqlite3.IntegrityError:
+        return jsonify({"error": "user_email already exists"}), 409
+
+    new_user_id = cursor.lastrowid
+
+    return(
+        jsonify(
+            {
+                "id": new_user_id,
+                "user_email": user_email,
+                "name": name,
+            }
+        ),
+        201,
+    )
+
 
 def recipe_to_dict(row):
     return {
