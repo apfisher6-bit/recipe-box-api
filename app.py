@@ -46,7 +46,7 @@ def register():
         return jsonify({"error": "user_email and password are required"}), 400
 
     db = get_db()
-    password_hash = generate_password_hash(password)
+    password_hash = hash_password(password)
     try:
         cursor = db.execute("""
         INSERT INTO users(user_email, name, password_hash)
@@ -70,7 +70,27 @@ def register():
         201,
     )
 
+@app.post("/login")
+def login():
+    data = request.get_json()
+    user_email = data.get("user_email")
+    password = data.get("password")
 
+    if not user_email or not password:
+        return jsonify({"error": "User email and password are required"}), 400
+    db = get_db()
+
+    user = db.execute(
+        "SELECT id, user_email, name, password_hash FROM users WHERE user_email = ?", (user_email,),).fetchone()
+    if not user or not verify_password(user["password_hash"], password):
+        return jsonify({"error": "Invalid credentials"}), 401
+            
+    return jsonify({
+        "id": user["id"],
+        "name": user["name"],
+        "user_email": user["user_email"]
+    }), 200
+    
 def recipe_to_dict(row):
     return {
         "id": row["id"],
